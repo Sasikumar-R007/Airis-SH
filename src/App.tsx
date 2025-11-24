@@ -9,6 +9,7 @@ import Caregiver from './screens/Caregiver'
 import DeviceSettings from './screens/DeviceSettings'
 import About from './screens/About'
 import Toast from './components/Toast'
+import { SettingsProvider, useSettings } from './context/SettingsContext'
 
 export interface AppState {
   connectionStatus: 'connected' | 'searching' | 'disconnected'
@@ -16,19 +17,16 @@ export interface AppState {
   batteryLevel: number
   currentMode: 'Normal' | 'Comfort Mode' | 'Safe Mode'
   gestureActive: boolean
-  comfortModeEnabled: boolean
-  sosEnabled: boolean
 }
 
-function App() {
+function AppContent() {
+  const { settings } = useSettings()
   const [appState, setAppState] = useState<AppState>({
     connectionStatus: 'searching',
     isWiredMode: false,
     batteryLevel: 75,
-    currentMode: 'Normal',
-    gestureActive: false,
-    comfortModeEnabled: false,
-    sosEnabled: true
+    currentMode: settings.safeMode ? 'Safe Mode' : 'Normal',
+    gestureActive: false
   })
 
   const [toasts, setToasts] = useState<Array<{ id: number; message: string; type: 'info' | 'success' | 'warning' | 'error' }>>([])
@@ -66,12 +64,20 @@ function App() {
           <Route path="/about" element={<About />} />
         </Routes>
       </Layout>
-      <div className="fixed bottom-4 right-4 z-50 space-y-2">
+      <div className="fixed bottom-4 right-4 z-50 space-y-2" role="status" aria-live="polite">
         {toasts.map(toast => (
           <Toast key={toast.id} message={toast.message} type={toast.type} />
         ))}
       </div>
     </Router>
+  )
+}
+
+function App() {
+  return (
+    <SettingsProvider>
+      <AppContent />
+    </SettingsProvider>
   )
 }
 

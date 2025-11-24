@@ -1,9 +1,9 @@
-import { useState } from 'react'
 import { motion } from 'framer-motion'
 import Slider from '../components/Slider'
 import ToggleSwitch from '../components/ToggleSwitch'
 import { Heart, Info } from 'lucide-react'
 import { AppState } from '../App'
+import { useSettings } from '../context/SettingsContext'
 
 interface ComfortModeProps {
   appState: AppState
@@ -12,13 +12,12 @@ interface ComfortModeProps {
 }
 
 const ComfortMode = ({ appState, setAppState, showToast }: ComfortModeProps) => {
-  const [antiShakeStrength, setAntiShakeStrength] = useState(5)
-  const [smoothingLevel, setSmoothingLevel] = useState(7)
+  const { settings, updateSettings } = useSettings()
+  const comfortModeEnabled = appState.currentMode === 'Comfort Mode'
 
   const handleToggleComfortMode = (enabled: boolean) => {
     setAppState(prev => ({
       ...prev,
-      comfortModeEnabled: enabled,
       currentMode: enabled ? 'Comfort Mode' : 'Normal'
     }))
     showToast(`Comfort Mode ${enabled ? 'activated' : 'deactivated'}`, enabled ? 'success' : 'info')
@@ -41,13 +40,13 @@ const ComfortMode = ({ appState, setAppState, showToast }: ComfortModeProps) => 
             animate={{ opacity: 1, y: 0 }}
           >
             <ToggleSwitch
-              enabled={appState.comfortModeEnabled}
+              enabled={comfortModeEnabled}
               onChange={handleToggleComfortMode}
               label="Comfort Mode"
             />
           </motion.div>
 
-          {appState.comfortModeEnabled && (
+          {comfortModeEnabled && (
             <>
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -58,9 +57,9 @@ const ComfortMode = ({ appState, setAppState, showToast }: ComfortModeProps) => 
                   label="Anti-Shake Strength"
                   min={1}
                   max={10}
-                  value={antiShakeStrength}
+                  value={settings.antiShakeStrength}
                   onChange={(val) => {
-                    setAntiShakeStrength(val)
+                    updateSettings({ antiShakeStrength: val })
                     showToast(`Anti-shake strength set to ${val}`, 'info')
                   }}
                   unit=""
@@ -76,9 +75,9 @@ const ComfortMode = ({ appState, setAppState, showToast }: ComfortModeProps) => 
                   label="Cursor Smoothing Level"
                   min={1}
                   max={10}
-                  value={smoothingLevel}
+                  value={settings.smoothingLevel}
                   onChange={(val) => {
-                    setSmoothingLevel(val)
+                    updateSettings({ smoothingLevel: val })
                     showToast(`Smoothing level set to ${val}`, 'info')
                   }}
                   unit=""

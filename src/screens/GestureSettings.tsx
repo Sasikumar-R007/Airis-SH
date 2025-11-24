@@ -1,26 +1,18 @@
-import { useState } from 'react'
 import { motion } from 'framer-motion'
 import Slider from '../components/Slider'
 import ToggleSwitch from '../components/ToggleSwitch'
 import { RotateCcw } from 'lucide-react'
+import { useSettings } from '../context/SettingsContext'
 
 interface GestureSettingsProps {
   showToast: (message: string, type: 'info' | 'success' | 'warning' | 'error') => void
 }
 
 const GestureSettings = ({ showToast }: GestureSettingsProps) => {
-  const [dwellTime, setDwellTime] = useState(2)
-  const [twistSensitivity, setTwistSensitivity] = useState(5)
-  const [sosEnabled, setSosEnabled] = useState(true)
-  const [autoCenterEnabled, setAutoCenterEnabled] = useState(true)
-  const [volumeTwistEnabled, setVolumeTwistEnabled] = useState(false)
+  const { settings, updateSettings, resetSettings } = useSettings()
 
   const handleReset = () => {
-    setDwellTime(2)
-    setTwistSensitivity(5)
-    setSosEnabled(true)
-    setAutoCenterEnabled(true)
-    setVolumeTwistEnabled(false)
+    resetSettings()
     showToast('Settings reset to defaults', 'success')
   }
 
@@ -41,9 +33,9 @@ const GestureSettings = ({ showToast }: GestureSettingsProps) => {
               label="Left Click Dwell Time"
               min={1}
               max={3}
-              value={dwellTime}
+              value={settings.dwellTime}
               onChange={(val) => {
-                setDwellTime(val)
+                updateSettings({ dwellTime: val })
                 showToast(`Dwell time set to ${val}s`, 'info')
               }}
               unit="s"
@@ -60,9 +52,9 @@ const GestureSettings = ({ showToast }: GestureSettingsProps) => {
               label="Right Click Twist Sensitivity"
               min={1}
               max={10}
-              value={twistSensitivity}
+              value={settings.twistSensitivity}
               onChange={(val) => {
-                setTwistSensitivity(val)
+                updateSettings({ twistSensitivity: val })
                 showToast(`Twist sensitivity set to ${val}`, 'info')
               }}
               unit=""
@@ -76,9 +68,9 @@ const GestureSettings = ({ showToast }: GestureSettingsProps) => {
             transition={{ delay: 0.2 }}
           >
             <ToggleSwitch
-              enabled={sosEnabled}
+              enabled={settings.sosEnabled}
               onChange={(val) => {
-                setSosEnabled(val)
+                updateSettings({ sosEnabled: val })
                 showToast(`SOS Gesture ${val ? 'enabled' : 'disabled'}`, val ? 'success' : 'warning')
               }}
               label="Enable SOS Gesture"
@@ -91,9 +83,9 @@ const GestureSettings = ({ showToast }: GestureSettingsProps) => {
             transition={{ delay: 0.3 }}
           >
             <ToggleSwitch
-              enabled={autoCenterEnabled}
+              enabled={settings.autoCenterEnabled}
               onChange={(val) => {
-                setAutoCenterEnabled(val)
+                updateSettings({ autoCenterEnabled: val })
                 showToast(`Auto-Center ${val ? 'enabled' : 'disabled'}`, 'info')
               }}
               label="Enable Auto-Center Gesture"
@@ -106,9 +98,9 @@ const GestureSettings = ({ showToast }: GestureSettingsProps) => {
             transition={{ delay: 0.4 }}
           >
             <ToggleSwitch
-              enabled={volumeTwistEnabled}
+              enabled={settings.volumeTwistEnabled}
               onChange={(val) => {
-                setVolumeTwistEnabled(val)
+                updateSettings({ volumeTwistEnabled: val })
                 showToast(`Volume Twist ${val ? 'enabled' : 'disabled'}`, 'info')
               }}
               label="Enable Volume Twist Gesture"

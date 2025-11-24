@@ -1,6 +1,6 @@
-import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Plus, Trash2, AlertCircle, Send } from 'lucide-react'
+import { useSettings } from '../context/SettingsContext'
 
 interface EmergencyContact {
   id: number
@@ -14,11 +14,10 @@ interface CaregiverProps {
 }
 
 const Caregiver = ({ showToast }: CaregiverProps) => {
-  const [contacts, setContacts] = useState<EmergencyContact[]>([
-    { id: 1, name: 'Emergency Contact', phone: '(555) 123-4567', email: 'contact@example.com' }
-  ])
-  const [messageTemplate, setMessageTemplate] = useState('Emergency! I need assistance. Please contact me immediately.')
-  const [sosActive, setSosActive] = useState(true)
+  const { settings, updateSettings } = useSettings()
+  const contacts = settings.emergencyContacts
+  const messageTemplate = settings.messageTemplate
+  const sosActive = settings.sosEnabled
 
   const addContact = () => {
     const newContact: EmergencyContact = {
@@ -27,17 +26,24 @@ const Caregiver = ({ showToast }: CaregiverProps) => {
       phone: '',
       email: ''
     }
-    setContacts([...contacts, newContact])
+    updateSettings({ emergencyContacts: [...contacts, newContact] })
     showToast('New contact added', 'success')
   }
 
   const deleteContact = (id: number) => {
-    setContacts(contacts.filter(c => c.id !== id))
+    updateSettings({ emergencyContacts: contacts.filter(c => c.id !== id) })
     showToast('Contact removed', 'info')
   }
 
   const testSOS = () => {
     showToast('SOS Alert Sent!', 'warning')
+  }
+
+  const updateContact = (id: number, field: keyof EmergencyContact, value: string) => {
+    const updated = contacts.map(c =>
+      c.id === id ? { ...c, [field]: value } : c
+    )
+    updateSettings({ emergencyContacts: updated })
   }
 
   return (
@@ -74,14 +80,10 @@ const Caregiver = ({ showToast }: CaregiverProps) => {
                     <input
                       type="text"
                       value={contact.name}
-                      onChange={(e) => {
-                        const updated = contacts.map(c =>
-                          c.id === contact.id ? { ...c, name: e.target.value } : c
-                        )
-                        setContacts(updated)
-                      }}
+                      onChange={(e) => updateContact(contact.id, 'name', e.target.value)}
                       className="text-lg font-medium bg-transparent border-none outline-none text-gray-800"
                       placeholder="Contact Name"
+                      aria-label="Contact name"
                     />
                     <button
                       onClick={() => deleteContact(contact.id)}
@@ -93,26 +95,18 @@ const Caregiver = ({ showToast }: CaregiverProps) => {
                   <input
                     type="tel"
                     value={contact.phone}
-                    onChange={(e) => {
-                      const updated = contacts.map(c =>
-                        c.id === contact.id ? { ...c, phone: e.target.value } : c
-                      )
-                      setContacts(updated)
-                    }}
+                    onChange={(e) => updateContact(contact.id, 'phone', e.target.value)}
                     className="w-full px-3 py-2 rounded-lg bg-white/50 border border-gray-200 outline-none focus:border-primary-400"
                     placeholder="Phone Number"
+                    aria-label="Phone number"
                   />
                   <input
                     type="email"
                     value={contact.email}
-                    onChange={(e) => {
-                      const updated = contacts.map(c =>
-                        c.id === contact.id ? { ...c, email: e.target.value } : c
-                      )
-                      setContacts(updated)
-                    }}
+                    onChange={(e) => updateContact(contact.id, 'email', e.target.value)}
                     className="w-full px-3 py-2 rounded-lg bg-white/50 border border-gray-200 outline-none focus:border-primary-400"
                     placeholder="Email Address"
+                    aria-label="Email address"
                   />
                 </motion.div>
               ))}
@@ -128,9 +122,10 @@ const Caregiver = ({ showToast }: CaregiverProps) => {
             <h3 className="text-xl font-semibold text-gray-800 mb-4">Message Template</h3>
             <textarea
               value={messageTemplate}
-              onChange={(e) => setMessageTemplate(e.target.value)}
+              onChange={(e) => updateSettings({ messageTemplate: e.target.value })}
               className="w-full h-32 px-4 py-3 rounded-xl bg-white/50 border border-gray-200 outline-none focus:border-primary-400 resize-none"
               placeholder="Emergency message template..."
+              aria-label="Emergency message template"
             />
           </motion.div>
         </div>
