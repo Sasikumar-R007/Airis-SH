@@ -119,12 +119,12 @@ const ComfortMode = ({ appState, setAppState, showToast }: ComfortModeProps) => 
                 <motion.div
                   key={index}
                   animate={{
-                    scale: appState.comfortModeEnabled ? [1, 1.3, 1] : 1,
-                    opacity: appState.comfortModeEnabled ? [0.3, 0.8, 0.3] : 0.3
+                    scale: comfortModeEnabled ? [1, 1.3, 1] : 1,
+                    opacity: comfortModeEnabled ? [0.3, 0.8, 0.3] : 0.3
                   }}
                   transition={{
                     duration: 4,
-                    repeat: appState.comfortModeEnabled ? Infinity : 0,
+                    repeat: comfortModeEnabled ? Infinity : 0,
                     delay: index * 1.3,
                     ease: "easeInOut"
                   }}
@@ -138,7 +138,7 @@ const ComfortMode = ({ appState, setAppState, showToast }: ComfortModeProps) => 
             </div>
           </div>
           <p className="text-center text-gray-600 mt-4">
-            {appState.comfortModeEnabled ? 'Calming breathing effect active' : 'Comfort Mode inactive'}
+            {comfortModeEnabled ? 'Calming breathing effect active' : 'Comfort Mode inactive'}
           </p>
         </motion.div>
       </div>
