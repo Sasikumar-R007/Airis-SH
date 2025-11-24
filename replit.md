@@ -14,6 +14,9 @@ This is a complete desktop-style application built with React, TypeScript, and T
 - Added smooth animations and transitions throughout the app
 - Configured Tailwind CSS with custom animations (glow, breathe, float, pulse-soft)
 - Set up workflow to run development server on port 5000
+- **Added SettingsContext with localStorage persistence** - All user settings now persist across page reloads
+- **Enhanced accessibility** - Added ARIA labels and improved assistive technology support
+- **Fixed Comfort Mode animation** - LED breathing animation now correctly responds to mode changes
 
 ## Project Structure
 
@@ -24,6 +27,8 @@ This is a complete desktop-style application built with React, TypeScript, and T
 │   │   ├── Toast.tsx           # Toast notification system
 │   │   ├── ToggleSwitch.tsx    # Accessible toggle component
 │   │   └── Slider.tsx          # Range slider component
+│   ├── context/
+│   │   └── SettingsContext.tsx # Global settings with localStorage persistence
 │   ├── screens/
 │   │   ├── Dashboard.tsx       # Connection status, battery, mode, gestures
 │   │   ├── GestureSettings.tsx # Gesture customization
@@ -106,7 +111,9 @@ This is a complete desktop-style application built with React, TypeScript, and T
 - Toast notifications slide in from right
 
 ### State Management
-- React hooks (useState, useEffect)
+- React Context API with SettingsContext for global state
+- localStorage persistence for all user settings and preferences
+- React hooks (useState, useEffect) for component-level state
 - Global app state for connection, battery, mode, gestures
 - Toast notification queue system
 - Auto-refresh connection status every 3 seconds
@@ -146,7 +153,6 @@ The entire application is designed to be:
 ## Future Enhancements
 
 - Real device Bluetooth/USB integration
-- Persistent settings storage
 - Multi-language support
 - Voice control integration
 - Activity logging and analytics
