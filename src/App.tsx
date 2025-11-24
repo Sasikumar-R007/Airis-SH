@@ -55,7 +55,7 @@ function AppContent() {
     <Router>
       <Layout appState={appState}>
         <Routes>
-          <Route path="/" element={<Dashboard appState={appState} showToast={showToast} />} />
+          <Route path="/" element={<Dashboard appState={appState} />} />
           <Route path="/gesture-settings" element={<GestureSettings showToast={showToast} />} />
           <Route path="/comfort-mode" element={<ComfortMode appState={appState} setAppState={setAppState} showToast={showToast} />} />
           <Route path="/accessibility" element={<AccessibilityTools showToast={showToast} />} />

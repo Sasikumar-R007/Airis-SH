@@ -4,10 +4,9 @@ import { AppState } from '../App'
 
 interface DashboardProps {
   appState: AppState
-  showToast: (message: string, type: 'info' | 'success' | 'warning' | 'error') => void
 }
 
-const Dashboard = ({ appState, showToast }: DashboardProps) => {
+const Dashboard = ({ appState }: DashboardProps) => {
   const batteryColor = appState.batteryLevel > 50 ? 'text-green-500' : appState.batteryLevel > 20 ? 'text-yellow-500' : 'text-red-500'
   const batteryGradient = appState.batteryLevel > 50 ? 'from-green-400 to-green-500' : appState.batteryLevel > 20 ? 'from-yellow-400 to-yellow-500' : 'from-red-400 to-red-500'
 
