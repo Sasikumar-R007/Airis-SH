@@ -370,7 +370,7 @@ const AirMouseSystem = () => {
     }, 3400)
   }
 
-  const createRipple = (x: number, y: number) => {
+  const createRipple = (_x: number, _y: number) => {
     // Ripple effect would be implemented with CSS animations
     // For now, we'll just show a toast
   }

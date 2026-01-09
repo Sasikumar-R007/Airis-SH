@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import Slider from '../components/Slider'
-import { Upload, AlertTriangle, Info, Settings, Cpu, Wifi, Battery, RotateCw, Download, RefreshCw } from 'lucide-react'
+import { Upload, AlertTriangle, Info, Settings, Cpu, Wifi, Battery, RotateCw, Download } from 'lucide-react'
 import { useSettings } from '../context/SettingsContext'
 
 interface DeviceSettingsProps {

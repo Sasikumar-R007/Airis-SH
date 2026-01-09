@@ -20,7 +20,6 @@ const ComfortMode = ({ appState, setAppState, showToast }: ComfortModeProps) => 
       ...prev,
       currentMode: enabled ? 'Comfort Mode' : 'Normal'
     }))
-    updateSettings({ comfortMode: enabled })
     showToast(`Comfort Mode ${enabled ? 'activated' : 'deactivated'}`, enabled ? 'success' : 'info')
   }
 

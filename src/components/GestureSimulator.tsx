@@ -8,7 +8,7 @@ interface GestureSimulatorProps {
   isConnected?: boolean
 }
 
-const GestureSimulator = ({ dwellTime, twistSensitivity, smoothingLevel, isConnected = false }: GestureSimulatorProps) => {
+const GestureSimulator = ({ dwellTime, twistSensitivity: _twistSensitivity, smoothingLevel, isConnected = false }: GestureSimulatorProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 })
   const [isDwelling, setIsDwelling] = useState(false)
