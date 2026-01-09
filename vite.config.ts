@@ -10,5 +10,19 @@ export default defineConfig({
       clientPort: 5000
     },
     allowedHosts: ['.replit.dev', '.replit.app']
+  },
+  build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
+    sourcemap: false,
+    minify: 'esbuild',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'ui-vendor': ['framer-motion', 'lucide-react']
+        }
+      }
+    }
   }
 })
