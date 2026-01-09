@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Air Mouse 3D | Keypad Monitor System</title>
+    <style>
+      /* --- GLOBAL STYLES --- */
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        background-color: #050508;
+        font-family: "Share Tech Mono", monospace;
+        color: #e0e0e0;
+        overflow: hidden;
+      }
+
+      @import url("https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap");
+
+      /* --- CANVAS LAYOUT --- */
+      #backgroundContainer {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: -2;
+      }
+
+      #mainCanvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: -1;
+        display: block;
+        cursor: crosshair;
+        background-color: transparent;
+      }
+
+      /* --- HUD Panel --- */
+      #hud {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        background: rgba(10, 25, 40, 0.9);
+        padding: 18px 25px;
+        border-radius: 12px;
+        border: 1px solid rgba(0, 255, 255, 0.4);
+        box-shadow: 0 0 20px rgba(0, 255, 255, 0.2),
+          inset 0 0 10px rgba(0, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        color: #e0e0e0;
+        font-size: 16px;
+        z-index: 10;
+        transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+      }
+      #hud h2 {
+        margin: 0 0 12px 0;
+        font-size: 24px;
+        color: #00ffff;
+        text-shadow: 0 0 8px rgba(0, 255, 255, 0.9);
+      }
+      .row {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 6px;
+      }
+      .row span:first-child {
+        color: #aaaaaa;
+      }
+
+      /* --- NEW RECENTER BUTTON STYLE --- */
+      #recenterButton {
+        width: 100%;
+        margin-top: 15px;
+        padding: 8px;
+        background: rgba(255, 255, 0, 0.2);
+        color: #ffff00;
+        border: 1px solid #ffff00;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background 0.2s, box-shadow 0.2s;
+      }
+      #recenterButton:hover {
+        background: rgba(255, 255, 0, 0.4);
+        box-shadow: 0 0 10px #ffff00;
+      }
+
+      /* --- Toasts (Alert Boxes) --- */
+      #toasts {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        z-index: 20;
+      }
+      .toast {
+        background: rgba(20, 35, 50, 0.98);
+        color: #e0e0e0;
+        padding: 15px 22px;
+        border-radius: 10px;
+        border-left: 5px solid #00ffff;
+        font-size: 16px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+        animation: slideIn 0.4s ease, fadeOut 0.4s ease 3s forwards;
+      }
+      @keyframes slideIn {
+        from {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+      @keyframes fadeOut {
+        to {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+      }
+      #activityBar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 5px;
+        background: linear-gradient(90deg, transparent 0%, #00ffff 100%);
+        box-shadow: 0 0 12px #00ffff;
+        width: 0;
+        transition: width 0.1s ease;
+        z-index: 5;
+      }
+
+      /* --- Left Click Ripple Effect --- */
+      .ripple {
+        position: fixed;
+        border: 3px solid rgba(0, 255, 255, 0.8);
+        border-radius: 50%;
+        pointer-events: none;
+        animation: rippleEffect 1s ease-out forwards;
+        z-index: 15;
+        transform: translate(-50%, -50%);
+      }
+      @keyframes rippleEffect {
+        0% {
+          width: 0;
+          height: 0;
+          opacity: 1;
+          box-shadow: 0 0 20px rgba(0, 255, 255, 0.8);
+        }
+        100% {
+          width: 300px;
+          height: 300px;
+          opacity: 0;
+          box-shadow: 0 0 40px rgba(0, 255, 255, 0);
+        }
+      }
+
+      /* --- KEYPAD MONITOR STYLES --- */
+      @keyframes blink {
+        50% {
+          border-color: transparent;
+        }
+      }
+      #keypadMonitor {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 600px;
+        max-width: 90vw;
+        background: rgba(0, 0, 0, 0.9);
+        border: 2px solid #00ffff;
+        box-shadow: 0 0 30px rgba(0, 255, 255, 0.4);
+        border-radius: 15px;
+        padding: 20px;
+        z-index: 50;
+        display: none;
+      }
+      #monitorDisplay {
+        background: #0d0d1a;
+        color: #00ff7f;
+        border: 1px solid #00ffff;
+        padding: 15px;
+        height: 60px;
+        margin-bottom: 15px;
+        font-size: 20px;
+        font-family: "Consolas", monospace;
+        overflow-x: hidden;
+        white-space: nowrap;
+        border-radius: 5px;
+        box-sizing: border-box;
+      }
+      /* Style for the blinking cursor (vertical line) */
+      #monitorDisplay.typing::after {
+        content: "|"; /* CHANGED to vertical line */
+        color: #00ff7f;
+        font-weight: bold;
+        margin-left: 2px;
+        animation: blink 1s step-start 0s infinite;
+      }
+      #keypadGrid {
+        display: grid;
+        grid-template-columns: repeat(10, 1fr);
+        gap: 8px;
+      }
+      .keypad-key {
+        background: #223344;
+        color: #00ffff;
+        border: 1px solid #00ffff55;
+        padding: 10px 0;
+        text-align: center;
+        cursor: pointer;
+        border-radius: 5px;
+        font-size: 16px;
+        transition: background 0.1s, transform 0.1s, box-shadow 0.1s;
+        user-select: none;
+      }
+      .keypad-key:hover {
+        background: #334455;
+        box-shadow: 0 0 10px #00ffff;
+      }
+      .keypad-key:active {
+        transform: scale(0.95);
+        background: #00ffff;
+        color: #000;
+      }
+      .keypad-key.key-close,
+      .keypad-key.key-enter {
+        background: #440055;
+      }
+      .keypad-key.key-close:hover,
+      .keypad-key.key-enter:hover {
+        background: #660088;
+      }
+      .keypad-key.key-space {
+        grid-column: span 4;
+      }
+      .keypad-key.key-back {
+        grid-column: span 2;
+        background: #552222;
+      }
+
+      /* --- KEYPAD BUTTON --- */
+      #openKeypadButton {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: rgba(0, 255, 255, 0.2);
+        color: #00ffff;
+        padding: 10px 15px;
+        border: 1px solid #00ffff;
+        border-radius: 8px;
+        cursor: pointer;
+        z-index: 10;
+        transition: background 0.2s, box-shadow 0.2s;
+      }
+      #openKeypadButton:hover {
+        background: rgba(0, 255, 255, 0.4);
+        box-shadow: 0 0 15px #00ffff;
+      }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  </head>
+  <body>
+    <div id="backgroundContainer"></div>
+
+    <canvas id="mainCanvas"></canvas>
+
+    <div id="keypadMonitor">
+      <div id="monitorDisplay">_</div>
+      <div id="keypadGrid">
+        <div class="keypad-key" data-key="Q">Q</div>
+        <div class="keypad-key" data-key="W">W</div>
+        <div class="keypad-key" data-key="E">E</div>
+        <div class="keypad-key" data-key="R">R</div>
+        <div class="keypad-key" data-key="T">T</div>
+        <div class="keypad-key" data-key="Y">Y</div>
+        <div class="keypad-key" data-key="U">U</div>
+        <div class="keypad-key" data-key="I">I</div>
+        <div class="keypad-key" data-key="O">O</div>
+        <div class="keypad-key" data-key="P">P</div>
+        <div class="keypad-key" data-key="A">A</div>
+        <div class="keypad-key" data-key="S">S</div>
+        <div class="keypad-key" data-key="D">D</div>
+        <div class="keypad-key" data-key="F">F</div>
+        <div class="keypad-key" data-key="G">G</div>
+        <div class="keypad-key" data-key="H">H</div>
+        <div class="keypad-key" data-key="J">J</div>
+        <div class="keypad-key" data-key="K">K</div>
+        <div class="keypad-key" data-key="L">L</div>
+        <div class="keypad-key" data-key="'">"</div>
+        <div class="keypad-key" data-key="Z">Z</div>
+        <div class="keypad-key" data-key="X">X</div>
+        <div class="keypad-key" data-key="C">C</div>
+        <div class="keypad-key" data-key="V">V</div>
+        <div class="keypad-key" data-key="B">B</div>
+        <div class="keypad-key" data-key="N">N</div>
+        <div class="keypad-key" data-key="M">M</div>
+        <div class="keypad-key" data-key=".">.</div>
+        <div class="keypad-key" data-key=",">,</div>
+        <div class="keypad-key" data-key="?">?</div>
+        <div class="keypad-key key-back" data-key="BACK">BACK</div>
+        <div class="keypad-key key-space" data-key=" ">SPACE</div>
+        <div class="keypad-key key-enter" data-key="ENTER">ENTER</div>
+        <div class="keypad-key key-close" data-key="CLOSE">X</div>
+      </div>
+    </div>
+
+    <button id="openKeypadButton">Open Keypad</button>
+
+    <div id="hud">
+      <h2>Air Mouse H-System</h2>
+      <div class="row"><span>X:</span><span id="x">0</span></div>
+      <div class="row"><span>Y:</span><span id="y">0</span></div>
+      <div class="row"><span>ΔX:</span><span id="dx">0</span></div>
+      <div class="row"><span>ΔY:</span><span id="dy">0</span></div>
+      <div class="row"><span>Speed:</span><span id="speed">0.00</span></div>
+      <div class="row"><span>Status:</span><span id="status">Active</span></div>
+      <button id="recenterButton">⌖ Recenter Cursor</button>
+    </div>
+    <div id="toasts"></div>
+    <div id="activityBar"></div>
+
+    <script>
+      // ---------------------------------------------
+      // --- CORE VARIABLES ---
+      // ---------------------------------------------
+      const mainCanvas = document.getElementById("mainCanvas");
+      const mainCtx = mainCanvas.getContext("2d");
+      const hudEl = document.getElementById("hud");
+      const xEl = document.getElementById("x");
+      const yEl = document.getElementById("y");
+      const dxEl = document.getElementById("dx");
+      const dyEl = document.getElementById("dy");
+      const speedEl = document.getElementById("speed");
+      const activityBar = document.getElementById("activityBar");
+      const toasts = document.getElementById("toasts");
+
+      // --- KEYPAD ELEMENTS ---
+      const keypadMonitor = document.getElementById("keypadMonitor");
+      const monitorDisplay = document.getElementById("monitorDisplay");
+      const keypadKeys = document.querySelectorAll(".keypad-key");
+      const openKeypadButton = document.getElementById("openKeypadButton");
+      const recenterButton = document.getElementById("recenterButton");
+      let currentText = "";
+
+      // --- CURSOR STATE ---
+      let px = innerWidth / 2;
+      let py = innerHeight / 2;
+      let lastMouseX = innerWidth / 2;
+      let lastMouseY = innerHeight / 2;
+      let trail = [];
+      let isWarpSpeed = false;
+      let mouseOverWindow = true;
+
+      // --- THREE.JS GLOBALS ---
+      let scene, camera, renderer, cubeGroup;
+
+      // ---------------------------------------------
+      // --- THREE.JS 3D CUBE BACKGROUND ---
+      // ---------------------------------------------
+      function init3D() {
+        const container = document.getElementById("backgroundContainer");
+        scene = new THREE.Scene();
+        camera = new THREE.PerspectiveCamera(
+          75,
+          window.innerWidth / window.innerHeight,
+          0.1,
+          1000
+        );
+
+        renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        container.appendChild(renderer.domElement);
+        renderer.setClearColor(0x050508, 1);
+
+        // --- LIGHTS ---
+        scene.add(new THREE.AmbientLight(0x444444));
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.2);
+        directionalLight.position.set(1, 1, 1);
+        scene.add(directionalLight);
+
+        // --- CUBE GRID ---
+        cubeGroup = new THREE.Group();
+        scene.add(cubeGroup);
+
+        const cubeSize = 1.8;
+        const spacing = 0.2;
+        const count = 10;
+
+        const geometry = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
+
+        const material = new THREE.MeshPhongMaterial({
+          color: 0x333333,
+          specular: 0x888888,
+          shininess: 30,
+          emissive: 0x002233,
+          emissiveIntensity: 0.8,
+        });
+
+        for (let x = 0; x < count; x++) {
+          for (let y = 0; y < count; y++) {
+            const mesh = new THREE.Mesh(geometry, material);
+
+            mesh.position.x = (x - count / 2 + 0.5) * (cubeSize + spacing);
+            mesh.position.y = (y - count / 2 + 0.5) * (cubeSize + spacing);
+            mesh.position.z = Math.random() * 4 - 2;
+
+            mesh.userData.initialZ = mesh.position.z;
+            mesh.userData.speed = Math.random() * 0.05 + 0.01;
+            mesh.userData.offset = Math.random() * Math.PI * 2;
+
+            cubeGroup.add(mesh);
+          }
+        }
+
+        camera.position.z = 18;
+
+        animate3D();
+      }
+
+      function animate3D() {
+        requestAnimationFrame(animate3D);
+
+        const time = Date.now() * 0.001;
+
+        cubeGroup.children.forEach((mesh) => {
+          mesh.position.z =
+            mesh.userData.initialZ +
+            Math.sin(time * mesh.userData.speed + mesh.userData.offset) * 0.5;
+          mesh.rotation.x += 0.0005;
+          mesh.rotation.y += 0.001;
+        });
+
+        cubeGroup.rotation.y += 0.0003;
+
+        renderer.render(scene, camera);
+      }
+
+      // ---------------------------------------------
+      // --- RESIZE AND INITIALIZATION ---
+      // ---------------------------------------------
+      function resize() {
+        mainCanvas.width = innerWidth;
+        mainCanvas.height = innerHeight;
+
+        if (renderer) {
+          camera.aspect = innerWidth / innerHeight;
+          camera.updateProjectionMatrix();
+          renderer.setSize(innerWidth, innerHeight);
+        }
+      }
+      window.addEventListener("resize", resize);
+
+      init3D();
+
+      // ---------------------------------------------
+      // --- KEYPAD LOGIC ---
+      // ---------------------------------------------
+
+      function updateDisplay() {
+        // 1. Update the actual text content
+        monitorDisplay.textContent = currentText;
+
+        // 2. Add or remove the 'typing' class for the blinking cursor
+        if (currentText.length > 0) {
+          monitorDisplay.classList.add("typing");
+        } else {
+          // If the display is empty, show the placeholder underscore and remove the blink animation
+          monitorDisplay.textContent = "|"; // Show the vertical line when empty
+          monitorDisplay.classList.remove("typing");
+        }
+
+        // 3. Auto-scroll to the end of the input (for long strings)
+        monitorDisplay.scrollLeft = monitorDisplay.scrollWidth;
+      }
+
+      openKeypadButton.addEventListener("click", () => {
+        keypadMonitor.style.display = "block";
+        openKeypadButton.style.display = "none";
+        updateDisplay();
+      });
+
+      keypadKeys.forEach((key) => {
+        key.addEventListener("click", () => {
+          const keyValue = key.getAttribute("data-key");
+
+          if (keyValue === "BACK") {
+            currentText = currentText.slice(0, -1);
+            toast("⌨️ Backspace");
+          } else if (keyValue === "ENTER") {
+            toast(`✅ Command Sent: "${currentText.trim()}"`);
+            currentText = "";
+          } else if (keyValue === "CLOSE") {
+            keypadMonitor.style.display = "none";
+            openKeypadButton.style.display = "block";
+            return;
+          } else if (currentText.length < 30) {
+            currentText += keyValue;
+            toast(`⌨️ Typed: ${keyValue}`);
+          }
+
+          updateDisplay();
+        });
+      });
+
+      // ---------------------------------------------
+      // --- MOUSE AND UI LOGIC ---
+      // ---------------------------------------------
+
+      // NEW FUNCTION: CENTERS THE CUSTOM CURSOR
+      function recenterCursor() {
+        const centerX = innerWidth / 2;
+        const centerY = innerHeight / 2;
+
+        px = centerX;
+        py = centerY;
+
+        // Clear trail for a clean reset
+        trail = [];
+
+        // Optional: Send a toast notification
+        toast("⌖ Cursor Position Recalibrated");
+
+        // Update HUD immediately
+        xEl.textContent = Math.round(px);
+        yEl.textContent = Math.round(py);
+      }
+
+      recenterButton.addEventListener("click", recenterCursor);
+
+      window.addEventListener("mousemove", (e) => {
+        const currentMouseX = e.clientX;
+        const currentMouseY = e.clientY;
+
+        const dx = currentMouseX - lastMouseX;
+        const dy = currentMouseY - lastMouseY;
+        const speed = Math.sqrt(dx * dx + dy * dy);
+
+        px = currentMouseX;
+        py = currentMouseY;
+
+        lastMouseX = currentMouseX;
+        lastMouseY = currentMouseY;
+
+        // --- HUD and Trail Updates ---
+        xEl.textContent = Math.round(px);
+        yEl.textContent = Math.round(py);
+        dxEl.textContent = dx.toFixed(2);
+        dyEl.textContent = dy.toFixed(2);
+        speedEl.textContent = speed.toFixed(2);
+        activityBar.style.width = Math.min(speed * 8, 100) + "%";
+
+        const trailDensity = isWarpSpeed ? 3 : 1;
+        for (let i = 0; i < trailDensity; i++) {
+          trail.push({ x: px, y: py, time: Date.now() });
+        }
+        const maxTrailLength = isWarpSpeed ? 120 : 40;
+        while (trail.length > maxTrailLength) trail.shift();
+
+        // Update cube rotation based on cursor movement
+        if (cubeGroup) {
+          cubeGroup.rotation.x += dy * 0.0001;
+          cubeGroup.rotation.y += dx * 0.0001;
+        }
+      });
+
+      // --- CURSOR ENTER/LEAVE LOGIC ---
+      window.addEventListener("mouseenter", (e) => {
+        if (!mouseOverWindow) {
+          px = e.clientX;
+          py = e.clientY;
+          lastMouseX = e.clientX;
+          lastMouseY = e.clientY;
+          mouseOverWindow = true;
+          trail = [];
+        }
+      });
+
+      window.addEventListener("mouseleave", () => {
+        mouseOverWindow = false;
+      });
+
+      // --- CLICK HANDLERS & TOASTS ---
+      window.addEventListener("mousedown", (e) => {
+        if (e.button === 0) {
+          toast("💥 Activation Pulse Sent (L-Click)");
+          createRipple(px, py);
+        }
+        if (e.button === 2) {
+          toast("⚡ Engaging Warp Trail (R-Click)");
+          isWarpSpeed = true;
+          hudEl.style.transform = "scale(1.05)";
+          hudEl.style.boxShadow =
+            "0 0 25px rgba(255, 0, 255, 0.4), inset 0 0 15px rgba(255, 0, 255, 0.2)";
+        }
+      });
+      window.addEventListener("mouseup", (e) => {
+        if (e.button === 2) {
+          isWarpSpeed = false;
+          hudEl.style.transform = "scale(1)";
+          hudEl.style.boxShadow =
+            "0 0 20px rgba(0, 255, 255, 0.2), inset 0 0 10px rgba(0, 255, 255, 0.1)";
+        }
+      });
+      window.addEventListener("contextmenu", (e) => e.preventDefault());
+
+      function toast(msg) {
+        const t = document.createElement("div");
+        t.className = "toast";
+        t.textContent = msg;
+        toasts.appendChild(t);
+        setTimeout(() => t.remove(), 3400);
+      }
+
+      function createRipple(x, y) {
+        const ripple = document.createElement("div");
+        ripple.className = "ripple";
+        ripple.style.left = `${x}px`;
+        ripple.style.top = `${y}px`;
+        document.body.appendChild(ripple);
+        setTimeout(() => ripple.remove(), 1000);
+      }
+
+      // --- MAIN CURSOR RENDER LOOP (2D Canvas) ---
+      function renderMain() {
+        mainCtx.fillStyle = "rgba(5, 5, 8, 0.3)";
+        mainCtx.fillRect(0, 0, mainCanvas.width, mainCanvas.height);
+
+        if (mouseOverWindow) {
+          // Trail
+          for (let i = 0; i < trail.length; i++) {
+            const { x, y, time } = trail[i];
+            const age = Date.now() - time;
+            const maxAge = isWarpSpeed ? 200 : 600;
+            const alpha = Math.max(0, 1 - age / maxAge);
+
+            let radius = isWarpSpeed ? 2 + i / 5 : 4;
+            let color = isWarpSpeed
+              ? `rgba(255,100,255,${alpha})`
+              : `rgba(0,255,255,${alpha})`;
+
+            mainCtx.fillStyle = color;
+            mainCtx.beginPath();
+            mainCtx.arc(x, y, radius, 0, Math.PI * 2);
+            mainCtx.fill();
+          }
+
+          // Holographic Cursor
+          const cursorColor = isWarpSpeed ? "#ff64ff" : "#00ffff";
+          const glowColor = isWarpSpeed
+            ? "rgba(255, 0, 255, 0.8)"
+            : "rgba(0, 255, 255, 0.8)";
+
+          // Outer Pulsing Ring
+          const pulse = Math.sin(Date.now() * 0.005) * 2 + 10;
+          mainCtx.shadowBlur = 20;
+          mainCtx.shadowColor = glowColor;
+          mainCtx.strokeStyle = cursorColor;
+          mainCtx.lineWidth = 1.5;
+          mainCtx.beginPath();
+          mainCtx.arc(px, py, pulse, 0, Math.PI * 2);
+          mainCtx.stroke();
+
+          // Inner Core
+          const coreSize = 4 + Math.sin(Date.now() * 0.01) * 1.5;
+          mainCtx.fillStyle = cursorColor;
+          mainCtx.beginPath();
+          mainCtx.arc(px, py, coreSize, 0, Math.PI * 2);
+          mainCtx.fill();
+
+          // Orbiter
+          const orbiterRadius = 18;
+          const orbiterSpeed = isWarpSpeed ? 0.05 : 0.02;
+          const angle = Date.now() * orbiterSpeed;
+          const orbiterX = px + orbiterRadius * Math.cos(angle);
+          const orbiterY = py + orbiterRadius * Math.sin(angle);
+          mainCtx.fillStyle = isWarpSpeed
+            ? "rgba(255, 150, 255, 0.9)"
+            : "rgba(0, 255, 255, 0.9)";
+          mainCtx.beginPath();
+          mainCtx.arc(orbiterX, orbiterY, 2, 0, Math.PI * 2);
+          mainCtx.fill();
+
+          mainCtx.shadowBlur = 0;
+        }
+
+        requestAnimationFrame(renderMain);
+      }
+      renderMain();
+    </script>
+  </body>
+</html>
